@@ -6,103 +6,76 @@
 <title>Team Brutal</title>
 
 <style>
-body{
-    margin:0;
-    background:#111;
-    color:white;
-    font-family:Arial,sans-serif;
-}
-
-.login-area{
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
-
-.card{
-    width:360px;
-    background:#222;
-    padding:30px;
-    border-radius:15px;
-}
-
-h1{
-    color:#f5b400;
-    text-align:center;
-}
-
-input, button{
-    width:100%;
-    padding:12px;
-    margin-top:10px;
-    border:none;
-    border-radius:8px;
-    box-sizing:border-box;
-}
-
-button{
-    background:#f5b400;
-    font-weight:bold;
-    cursor:pointer;
-}
-
-#msg{
-    text-align:center;
-    margin-top:15px;
-}
-
-.painel{
-    padding:25px;
-}
-
-.topo{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
-.box{
-    background:#222;
-    padding:20px;
-    border-radius:12px;
-    margin-top:20px;
-}
-
+body{margin:0;background:#111;color:white;font-family:Arial,sans-serif}
+.login-area{height:100vh;display:flex;justify-content:center;align-items:center}
+.card,.box{background:#222;padding:25px;border-radius:15px;margin-bottom:20px}
+.card{width:360px}
+h1{color:#f5b400;text-align:center}
+input,select,button,textarea{width:100%;padding:12px;margin-top:10px;border:none;border-radius:8px;box-sizing:border-box}
+button{background:#f5b400;font-weight:bold;cursor:pointer}
+.painel{display:none;padding:25px}
+.topo{display:flex;justify-content:space-between;align-items:center}
+.topo button{width:auto}
+table{width:100%;border-collapse:collapse;margin-top:15px}
+th,td{border-bottom:1px solid #444;padding:10px;text-align:left}
+.pendente{color:#ff5555;font-weight:bold}
+.pago{color:#4ade80;font-weight:bold}
 </style>
 </head>
 
 <body>
 
 <div class="login-area" id="loginArea">
-    <div class="card">
-        <h1>🥊 Team Brutal</h1>
-
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="senha" placeholder="Senha">
-
-        <button id="btnLogin">Entrar</button>
-
-        <p id="msg"></p>
-    </div>
+  <div class="card">
+    <h1>🥊 Team Brutal</h1>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="senha" placeholder="Senha">
+    <button id="btnLogin">Entrar</button>
+    <p id="msg"></p>
+  </div>
 </div>
 
-<div class="painel" id="painel" style="display:none;">
+<div class="painel" id="painel">
 
-    <div class="topo">
-        <h1>🥊 Team Brutal</h1>
-        <button id="btnSair" style="width:auto;">Sair</button>
-    </div>
+  <div class="topo">
+    <h1>🥊 Team Brutal</h1>
+    <button id="btnSair">Sair</button>
+  </div>
 
-    <div class="box">
-        <h2>Bem-vinda ao sistema</h2>
-        <p>Login conectado ao Firebase com sucesso.</p>
-    </div>
+  <div class="box">
+    <h2>Cadastrar aluno</h2>
 
-    <div class="box">
-        <h2>Próxima etapa</h2>
-        <button>Cadastrar aluno</button>
-    </div>
+    <input id="nome" placeholder="Nome do aluno">
+    <input id="telefone" placeholder="Telefone/WhatsApp">
+    <input id="valor" type="number" value="130" placeholder="Mensalidade">
+
+    <select id="vencimento">
+      <option value="10">Vencimento dia 10</option>
+      <option value="20">Vencimento dia 20</option>
+    </select>
+
+    <textarea id="obs" placeholder="Observações"></textarea>
+
+    <button id="btnSalvarAluno">Salvar aluno</button>
+    <p id="msgAluno"></p>
+  </div>
+
+  <div class="box">
+    <h2>Alunos cadastrados</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Telefone</th>
+          <th>Mensalidade</th>
+          <th>Vencimento</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="listaAlunos"></tbody>
+    </table>
+  </div>
 
 </div>
 
@@ -111,10 +84,18 @@ button{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 
 import {
-    getAuth,
-    signInWithEmailAndPassword,
-    signOut
+  getAuth,
+  signInWithEmailAndPassword,
+  signOut
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBL6b1pV6zSvZTxO1DDMW7OZlv2_3pq_GE",
@@ -127,33 +108,99 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 const loginArea = document.getElementById("loginArea");
 const painel = document.getElementById("painel");
 const msg = document.getElementById("msg");
+const msgAluno = document.getElementById("msgAluno");
+const listaAlunos = document.getElementById("listaAlunos");
 
 document.getElementById("btnLogin").addEventListener("click", async () => {
-    const email = document.getElementById("email").value;
-    const senha = document.getElementById("senha").value;
+  const email = document.getElementById("email").value;
+  const senha = document.getElementById("senha").value;
 
-    try {
-        await signInWithEmailAndPassword(auth, email, senha);
+  try {
+    await signInWithEmailAndPassword(auth, email, senha);
 
-        loginArea.style.display = "none";
-        painel.style.display = "block";
+    loginArea.style.display = "none";
+    painel.style.display = "block";
 
-    } catch(error) {
-        msg.innerHTML = "❌ Email ou senha inválidos";
-        console.error(error);
-    }
+    carregarAlunos();
+
+  } catch(error) {
+    msg.innerHTML = "❌ Email ou senha inválidos";
+    console.error(error);
+  }
 });
 
 document.getElementById("btnSair").addEventListener("click", async () => {
-    await signOut(auth);
-
-    painel.style.display = "none";
-    loginArea.style.display = "flex";
+  await signOut(auth);
+  painel.style.display = "none";
+  loginArea.style.display = "flex";
 });
+
+document.getElementById("btnSalvarAluno").addEventListener("click", async () => {
+  const nome = document.getElementById("nome").value.trim();
+  const telefone = document.getElementById("telefone").value.trim();
+  const valor = Number(document.getElementById("valor").value);
+  const vencimento = document.getElementById("vencimento").value;
+  const obs = document.getElementById("obs").value.trim();
+
+  if(!nome || !telefone || !valor){
+    msgAluno.innerHTML = "❌ Preencha nome, telefone e mensalidade.";
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "alunos"), {
+      nome,
+      telefone,
+      valor,
+      vencimento,
+      obs,
+      statusAtual: "pendente",
+      criadoEm: serverTimestamp(),
+      historicoPagamentos: {}
+    });
+
+    msgAluno.innerHTML = "✅ Aluno cadastrado com sucesso!";
+
+    document.getElementById("nome").value = "";
+    document.getElementById("telefone").value = "";
+    document.getElementById("valor").value = "130";
+    document.getElementById("vencimento").value = "10";
+    document.getElementById("obs").value = "";
+
+    carregarAlunos();
+
+  } catch(error) {
+    msgAluno.innerHTML = "❌ Erro ao salvar aluno.";
+    console.error(error);
+  }
+});
+
+async function carregarAlunos(){
+  listaAlunos.innerHTML = "";
+
+  const querySnapshot = await getDocs(collection(db, "alunos"));
+
+  querySnapshot.forEach((doc) => {
+    const aluno = doc.data();
+
+    listaAlunos.innerHTML += `
+      <tr>
+        <td>${aluno.nome}</td>
+        <td>${aluno.telefone}</td>
+        <td>R$ ${Number(aluno.valor).toFixed(2)}</td>
+        <td>Dia ${aluno.vencimento}</td>
+        <td class="${aluno.statusAtual === "pago" ? "pago" : "pendente"}">
+          ${aluno.statusAtual === "pago" ? "Pago" : "Pendente"}
+        </td>
+      </tr>
+    `;
+  });
+}
 
 </script>
 
