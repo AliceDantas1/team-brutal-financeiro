@@ -11,25 +11,28 @@ body{
     background:#111;
     color:white;
     font-family:Arial,sans-serif;
+}
+
+.login-area{
+    height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    height:100vh;
 }
 
-.container{
-    width:350px;
+.card{
+    width:360px;
     background:#222;
     padding:30px;
     border-radius:15px;
 }
 
 h1{
-    text-align:center;
     color:#f5b400;
+    text-align:center;
 }
 
-input{
+input, button{
     width:100%;
     padding:12px;
     margin-top:10px;
@@ -39,44 +42,67 @@ input{
 }
 
 button{
-    width:100%;
-    padding:12px;
-    margin-top:15px;
-    border:none;
-    border-radius:8px;
     background:#f5b400;
     font-weight:bold;
     cursor:pointer;
 }
 
 #msg{
-    margin-top:15px;
     text-align:center;
+    margin-top:15px;
 }
+
+.painel{
+    padding:25px;
+}
+
+.topo{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.box{
+    background:#222;
+    padding:20px;
+    border-radius:12px;
+    margin-top:20px;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="login-area" id="loginArea">
+    <div class="card">
+        <h1>🥊 Team Brutal</h1>
 
-<h1>🥊 Team Brutal</h1>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="senha" placeholder="Senha">
 
-<input
-type="email"
-id="email"
-placeholder="Email">
+        <button id="btnLogin">Entrar</button>
 
-<input
-type="password"
-id="senha"
-placeholder="Senha">
+        <p id="msg"></p>
+    </div>
+</div>
 
-<button id="btnLogin">
-Entrar
-</button>
+<div class="painel" id="painel" style="display:none;">
 
-<p id="msg"></p>
+    <div class="topo">
+        <h1>🥊 Team Brutal</h1>
+        <button id="btnSair" style="width:auto;">Sair</button>
+    </div>
+
+    <div class="box">
+        <h2>Bem-vinda ao sistema</h2>
+        <p>Login conectado ao Firebase com sucesso.</p>
+    </div>
+
+    <div class="box">
+        <h2>Próxima etapa</h2>
+        <button>Cadastrar aluno</button>
+    </div>
 
 </div>
 
@@ -86,7 +112,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/fireba
 
 import {
     getAuth,
-    signInWithEmailAndPassword
+    signInWithEmailAndPassword,
+    signOut
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -101,35 +128,31 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-document.getElementById("btnLogin")
-.addEventListener("click", async () => {
+const loginArea = document.getElementById("loginArea");
+const painel = document.getElementById("painel");
+const msg = document.getElementById("msg");
 
-    const email =
-    document.getElementById("email").value;
-
-    const senha =
-    document.getElementById("senha").value;
+document.getElementById("btnLogin").addEventListener("click", async () => {
+    const email = document.getElementById("email").value;
+    const senha = document.getElementById("senha").value;
 
     try {
+        await signInWithEmailAndPassword(auth, email, senha);
 
-        await signInWithEmailAndPassword(
-            auth,
-            email,
-            senha
-        );
+        loginArea.style.display = "none";
+        painel.style.display = "block";
 
-        document.getElementById("msg")
-        .innerHTML = "✅ Login realizado com sucesso!";
-
-    } catch(error){
-
-        document.getElementById("msg")
-        .innerHTML = "❌ " + error.message;
-
+    } catch(error) {
+        msg.innerHTML = "❌ Email ou senha inválidos";
         console.error(error);
-
     }
+});
 
+document.getElementById("btnSair").addEventListener("click", async () => {
+    await signOut(auth);
+
+    painel.style.display = "none";
+    loginArea.style.display = "flex";
 });
 
 </script>
