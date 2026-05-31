@@ -89,6 +89,13 @@ th,td{border-bottom:1px solid #444;padding:10px;text-align:left}
 
   <div class="box">
     <h2>Alunos cadastrados</h2>
+    <div style="margin-bottom:15px;">
+  <button onclick="filtroAtual='todos'; renderizarAlunos()">Todos</button>
+  <button onclick="filtroAtual='pendentes'; renderizarAlunos()">Pendentes</button>
+  <button onclick="filtroAtual='pagos'; renderizarAlunos()">Pagos</button>
+  <button onclick="filtroAtual='atraso'; renderizarAlunos()">Em atraso</button>
+  <button onclick="filtroAtual='suspenso'; renderizarAlunos()">Suspensos</button>
+</div>
 
     <input id="pesquisa" placeholder="🔍 Pesquisar aluno pelo nome">
 
@@ -144,6 +151,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let alunos = [];
+let filtroAtual = "todos";
 
 const loginArea = document.getElementById("loginArea");
 const painel = document.getElementById("painel");
@@ -240,9 +248,34 @@ function renderizarAlunos(){
 
   const mes = mesAtual();
 
-  const filtrados = alunos.filter(aluno =>
-    aluno.nome.toLowerCase().includes(busca)
-  );
+  const filtrados = alunos.filter(aluno => {
+  const nomeCombina = aluno.nome.toLowerCase().includes(busca);
+
+  const pagoMes = aluno.historicoPagamentos && aluno.historicoPagamentos[mes];
+
+  const hoje = new Date();
+  const diaHoje = hoje.getDate();
+
+  let situacao = aluno.situacao || "ativo";
+
+  if(situacao !== "suspenso"){
+    if(!pagoMes && diaHoje > Number(aluno.vencimento)){
+      situacao = "atraso";
+    }else{
+      situacao = "ativo";
+    }
+  }
+
+  if(!nomeCombina) return false;
+
+  if(filtroAtual === "todos") return true;
+  if(filtroAtual === "pendentes") return !pagoMes;
+  if(filtroAtual === "pagos") return pagoMes;
+  if(filtroAtual === "atraso") return situacao === "atraso";
+  if(filtroAtual === "suspenso") return situacao === "suspenso";
+
+  return true;
+});
 
   alunos.forEach(aluno => {
     const pagoMes = aluno.historicoPagamentos && aluno.historicoPagamentos[mes];
