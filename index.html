@@ -3,11 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Team Brutal</title>
 
 <style>
-
 body{
     margin:0;
     background:#111;
@@ -55,9 +53,7 @@ button{
     margin-top:15px;
     text-align:center;
 }
-
 </style>
-
 </head>
 
 <body>
@@ -76,7 +72,7 @@ type="password"
 id="senha"
 placeholder="Senha">
 
-<button onclick="login()">
+<button id="btnLogin">
 Entrar
 </button>
 
@@ -86,14 +82,12 @@ Entrar
 
 <script type="module">
 
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
 
 import {
-getAuth,
-signInWithEmailAndPassword
-}
-from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    getAuth,
+    signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBL6b1pV6zSvZTxO1DDMW7OZlv2_3pq_GE",
@@ -105,38 +99,38 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
 
-window.login = async function(){
+document.getElementById("btnLogin")
+.addEventListener("click", async () => {
 
-const email =
-document.getElementById("email").value;
+    const email =
+    document.getElementById("email").value;
 
-const senha =
-document.getElementById("senha").value;
+    const senha =
+    document.getElementById("senha").value;
 
-try{
+    try {
 
-await signInWithEmailAndPassword(
-auth,
-email,
-senha
-);
+        await signInWithEmailAndPassword(
+            auth,
+            email,
+            senha
+        );
 
-document.getElementById("msg")
-.innerHTML =
-"✅ Login realizado com sucesso!";
+        document.getElementById("msg")
+        .innerHTML = "✅ Login realizado com sucesso!";
 
-}catch(error){
+    } catch(error){
 
-document.getElementById("msg")
-.innerHTML =
-"❌ Email ou senha inválidos";
+        document.getElementById("msg")
+        .innerHTML = "❌ " + error.message;
 
-}
+        console.error(error);
 
-}
+    }
+
+});
 
 </script>
 
