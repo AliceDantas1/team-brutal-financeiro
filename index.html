@@ -90,11 +90,11 @@ th,td{border-bottom:1px solid #444;padding:10px;text-align:left}
   <div class="box">
     <h2>Alunos cadastrados</h2>
     <div style="margin-bottom:15px;">
-  <button onclick="filtroAtual='todos'; renderizarAlunos()">Todos</button>
-  <button onclick="filtroAtual='pendentes'; renderizarAlunos()">Pendentes</button>
-  <button onclick="filtroAtual='pagos'; renderizarAlunos()">Pagos</button>
-  <button onclick="filtroAtual='atraso'; renderizarAlunos()">Em atraso</button>
-  <button onclick="filtroAtual='suspenso'; renderizarAlunos()">Suspensos</button>
+<button onclick="filtrarAlunos('todos')">Todos</button>
+<button onclick="filtrarAlunos('pendentes')">Pendentes</button>
+<button onclick="filtrarAlunos('pagos')">Pagos</button>
+<button onclick="filtrarAlunos('atraso')">Em atraso</button>
+<button onclick="filtrarAlunos('suspenso')">Suspensos</button>
 </div>
 
     <input id="pesquisa" placeholder="🔍 Pesquisar aluno pelo nome">
@@ -489,7 +489,10 @@ window.verHistorico = function(id){
 
   alert(texto);
 }
-
+window.filtrarAlunos = function(filtro){
+  filtroAtual = filtro;
+  renderizarAlunos();
+}
 document.getElementById("pesquisa").addEventListener("input", renderizarAlunos);
 document.getElementById("pesquisa").addEventListener("input", renderizarAlunos);
 
