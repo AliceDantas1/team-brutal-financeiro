@@ -301,7 +301,7 @@ function renderizarAlunos(){
           }
 
           <button onclick="abrirWhatsApp('${telefoneLimpo}', '${aluno.nome}')">WhatsApp</button>
-
+<button onclick="verHistorico('${aluno.id}')">Histórico</button>
           ${
             situacao === "suspenso"
             ? `<button onclick="reativarAluno('${aluno.id}')">Reativar</button>`
@@ -395,7 +395,7 @@ window.abrirWhatsApp = function(telefone, nome){
 
   const mensagem = `Olá, ${nome}!
 
-Sua mensalidade da Team Brutal encontra-se pendente.
+Sua mensalidade do Studio Team Brutal encontra-se pendente.
 
 Caso já tenha realizado o pagamento, por favor desconsidere esta mensagem.
 
@@ -430,7 +430,34 @@ window.excluirAluno = async function(id, nome){
 
   carregarAlunos();
 }
+window.excluirAluno = async function(id, nome){
+  if(!confirm("Excluir " + nome + "?")) return;
 
+  await deleteDoc(doc(db, "alunos", id));
+
+  carregarAlunos();
+}
+
+window.verHistorico = function(id){
+  const aluno = alunos.find(a => a.id === id);
+  if(!aluno) return;
+
+  const historico = aluno.historicoPagamentos || {};
+
+  let texto = `Histórico de pagamentos - ${aluno.nome}\n\n`;
+
+  if(Object.keys(historico).length === 0){
+    texto += "Nenhum pagamento registrado ainda.";
+  }else{
+    Object.keys(historico).forEach(mes => {
+      texto += `${mes}: Pago em ${historico[mes].data} - R$ ${historico[mes].valor}\n`;
+    });
+  }
+
+  alert(texto);
+}
+
+document.getElementById("pesquisa").addEventListener("input", renderizarAlunos);
 document.getElementById("pesquisa").addEventListener("input", renderizarAlunos);
 
 </script>
