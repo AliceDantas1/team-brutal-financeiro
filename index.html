@@ -126,7 +126,8 @@ import {
   getDocs,
   doc,
   updateDoc,
-  serverTimestamp
+  deleteDoc,
+serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -253,9 +254,23 @@ function renderizarAlunos(){
       pendentes++;
     }
   });
-
   filtrados.forEach((aluno) => {
     const pagoMes = aluno.historicoPagamentos && aluno.historicoPagamentos[mes];
+
+    const hoje = new Date();
+    const diaHoje = hoje.getDate();
+
+    let situacao = aluno.situacao || "ativo";
+
+    if(situacao !== "suspenso"){
+      if(!pagoMes && diaHoje > Number(aluno.vencimento)){
+        situacao = "atraso";
+      }else{
+        situacao = "ativo";
+      }
+    }
+
+    const telefoneLimpo = String(aluno.telefone || "").replace(/\D/g, "");
 
     listaAlunos.innerHTML += `
       <tr>
@@ -263,11 +278,37 @@ function renderizarAlunos(){
         <td>${aluno.telefone}</td>
         <td>R$ ${Number(aluno.valor).toFixed(2)}</td>
         <td>Dia ${aluno.vencimento}</td>
+
         <td class="${pagoMes ? "pago" : "pendente"}">
           ${pagoMes ? "Pago" : "Pendente"}
         </td>
+
+        <td>
+          ${
+            situacao === "suspenso"
+            ? "🔴 Suspenso"
+            : situacao === "atraso"
+            ? "🟡 Em atraso"
+            : "🟢 Ativo"
+          }
+        </td>
+
         <td class="acoes">
-          <button onclick="receberPagamento('${aluno.id}')">Receber</button>
+          ${
+            pagoMes
+            ? `<span class="pago">Pago em ${aluno.ultimoPagamento || ""}</span>`
+            : `<button onclick="receberPagamento('${aluno.id}')">Receber</button>`
+          }
+
+          <button onclick="abrirWhatsApp('${telefoneLimpo}', '${aluno.nome}')">WhatsApp</button>
+
+          ${
+            situacao === "suspenso"
+            ? `<button onclick="reativarAluno('${aluno.id}')">Reativar</button>`
+            : `<button onclick="suspenderAluno('${aluno.id}')">Suspender</button>`
+          }
+
+          <button onclick="excluirAluno('${aluno.id}', '${aluno.nome}')">Excluir</button>
         </td>
       </tr>
     `;
@@ -303,10 +344,133 @@ window.receberPagamento = async function(id){
 
   carregarAlunos();
 }
+}
+
+window.abrirWhatsApp = function(telefone, nome){
+  if(!telefone){
+    alert("Esse aluno não tem telefone cadastrado.");
+    return;
+  }
+
+  const mensagem = `Olá, ${nome}!
+
+Sua mensalidade da Team Brutal encontra-se pendente.
+
+🥊 Team Brutal`;
+
+  const link = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+  window.open(link, "_blank");
+}
+
+window.suspenderAluno = async function(id){
+  await updateDoc(doc(db, "alunos", id), {
+    situacao: "suspenso"
+  });
+
+  carregarAlunos();
+}
+
+window.reativarAluno = async function(id){
+  await updateDoc(doc(db, "alunos", id), {
+    situacao: "ativo"
+  });
+
+  carregarAlunos();
+}
+
+window.excluirAluno = async function(id, nome){
+  if(!confirm("Excluir " + nome + "?")) return;
+
+  await deleteDoc(doc(db, "alunos", id));
+
+  carregarAlunos();
+}
+}
+
+window.abrirWhatsApp = function(telefone, nome){
+  if(!telefone){
+    alert("Esse aluno não tem telefone cadastrado.");
+    return;
+  }
+
+  const mensagem = `Olá, ${nome}!
+
+Sua mensalidade da Team Brutal encontra-se pendente.
+
+🥊 Team Brutal`;
+
+  const link = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+  window.open(link, "_blank");
+}
+
+window.suspenderAluno = async function(id){
+  await updateDoc(doc(db, "alunos", id), {
+    situacao: "suspenso"
+  });
+
+  carregarAlunos();
+}
+
+window.reativarAluno = async function(id){
+  await updateDoc(doc(db, "alunos", id), {
+    situacao: "ativo"
+  });
+
+  carregarAlunos();
+}
+
+window.excluirAluno = async function(id, nome){
+  if(!confirm("Excluir " + nome + "?")) return;
+
+  await deleteDoc(doc(db, "alunos", id));
+
+  carregarAlunos();
+}
+window.abrirWhatsApp = function(telefone, nome){
+  if(!telefone){
+    alert("Esse aluno não tem telefone cadastrado.");
+    return;
+  }
+
+  const mensagem = `Olá, ${nome}!
+
+Sua mensalidade da Team Brutal encontra-se pendente.
+
+🥊 Team Brutal`;
+
+  const link = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+  window.open(link, "_blank");
+}
+
+window.suspenderAluno = async function(id){
+  await updateDoc(doc(db, "alunos", id), {
+    situacao: "suspenso"
+  });
+
+  carregarAlunos();
+}
+
+window.reativarAluno = async function(id){
+  await updateDoc(doc(db, "alunos", id), {
+    situacao: "ativo"
+  });
+
+  carregarAlunos();
+}
+
+window.excluirAluno = async function(id, nome){
+  if(!confirm("Excluir " + nome + "?")) return;
+
+  await deleteDoc(doc(db, "alunos", id));
+
+  carregarAlunos();
+}
 
 document.getElementById("pesquisa").addEventListener("input", renderizarAlunos);
 
 </script>
+
+
 
 </body>
 </html>
