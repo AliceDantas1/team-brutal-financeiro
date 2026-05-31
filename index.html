@@ -1,69 +1,144 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Brutal</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body{
-            margin:0;
-            font-family:Arial, sans-serif;
-            background:#111;
-            color:white;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
-        }
+<title>Team Brutal</title>
 
-        .container{
-            background:#222;
-            padding:30px;
-            border-radius:15px;
-            width:350px;
-            text-align:center;
-        }
+<style>
 
-        h1{
-            color:#f5b400;
-        }
+body{
+    margin:0;
+    background:#111;
+    color:white;
+    font-family:Arial,sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
 
-        input{
-            width:90%;
-            padding:12px;
-            margin-top:10px;
-            border:none;
-            border-radius:8px;
-        }
+.container{
+    width:350px;
+    background:#222;
+    padding:30px;
+    border-radius:15px;
+}
 
-        button{
-            width:95%;
-            padding:12px;
-            margin-top:15px;
-            border:none;
-            border-radius:8px;
-            background:#f5b400;
-            font-weight:bold;
-            cursor:pointer;
-        }
-    </style>
+h1{
+    text-align:center;
+    color:#f5b400;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    border:none;
+    border-radius:8px;
+    box-sizing:border-box;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    margin-top:15px;
+    border:none;
+    border-radius:8px;
+    background:#f5b400;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+#msg{
+    margin-top:15px;
+    text-align:center;
+}
+
+</style>
+
 </head>
 
 <body>
 
 <div class="container">
-    <h1>🥊 Team Brutal</h1>
 
-    <h3>Sistema de Mensalidades</h3>
+<h1>🥊 Team Brutal</h1>
 
-    <input type="email" placeholder="Email">
+<input
+type="email"
+id="email"
+placeholder="Email">
 
-    <input type="password" placeholder="Senha">
+<input
+type="password"
+id="senha"
+placeholder="Senha">
 
-    <button>Entrar</button>
+<button onclick="login()">
+Entrar
+</button>
+
+<p id="msg"></p>
 
 </div>
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+
+import {
+getAuth,
+signInWithEmailAndPassword
+}
+from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBL6b1pV6zSvZTxO1DDMW7OZlv2_3pq_GE",
+  authDomain: "teambrutal-7e2d7.firebaseapp.com",
+  projectId: "teambrutal-7e2d7",
+  storageBucket: "teambrutal-7e2d7.firebasestorage.app",
+  messagingSenderId: "488619314946",
+  appId: "1:488619314946:web:ccf429f7d3f3333d203c1b"
+};
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+window.login = async function(){
+
+const email =
+document.getElementById("email").value;
+
+const senha =
+document.getElementById("senha").value;
+
+try{
+
+await signInWithEmailAndPassword(
+auth,
+email,
+senha
+);
+
+document.getElementById("msg")
+.innerHTML =
+"✅ Login realizado com sucesso!";
+
+}catch(error){
+
+document.getElementById("msg")
+.innerHTML =
+"❌ Email ou senha inválidos";
+
+}
+
+}
+
+</script>
 
 </body>
 </html>
