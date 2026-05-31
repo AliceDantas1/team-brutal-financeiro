@@ -68,7 +68,10 @@ th,td{border-bottom:1px solid #444;padding:10px;text-align:left}
       <p>Receita do mês</p>
     </div>
   </div>
-
+  <div class="box" id="boxAtrasados">
+    <h2>⚠️ Alunos em atraso</h2>
+    <div id="listaAtrasados"></div>
+  </div>
   <div class="box">
     <h2>Cadastrar aluno</h2>
 
@@ -241,6 +244,7 @@ async function carregarAlunos(){
 function renderizarAlunos(){
   const busca = document.getElementById("pesquisa").value.toLowerCase();
   listaAlunos.innerHTML = "";
+  document.getElementById("listaAtrasados").innerHTML = "";
 
   let pagos = 0;
   let pendentes = 0;
@@ -285,7 +289,25 @@ function renderizarAlunos(){
       receita += Number(aluno.valor || 0);
     }else{
       pendentes++;
+    }  const hoje = new Date();
+  const diaHoje = hoje.getDate();
+
+  let situacaoAluno = aluno.situacao || "ativo";
+
+  if(situacaoAluno !== "suspenso"){
+    if(!pagoMes && diaHoje > Number(aluno.vencimento)){
+      situacaoAluno = "atraso";
+    }else{
+      situacaoAluno = "ativo";
     }
+  }
+
+  if(situacaoAluno === "atraso"){
+    document.getElementById("listaAtrasados").innerHTML += `
+      <p>🟡 ${aluno.nome} - vencimento dia ${aluno.vencimento}</p>
+    `;
+  }
+});
   });
   filtrados.forEach((aluno) => {
     const pagoMes = aluno.historicoPagamentos && aluno.historicoPagamentos[mes];
