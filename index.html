@@ -16,10 +16,18 @@ button{background:#f5b400;font-weight:bold;cursor:pointer}
 .painel{display:none;padding:25px}
 .topo{display:flex;justify-content:space-between;align-items:center}
 .topo button{width:auto}
+.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:15px}
+.dash-card{background:#333;padding:18px;border-radius:12px;text-align:center}
+.dash-card h3{margin:0;color:#f5b400}
 table{width:100%;border-collapse:collapse;margin-top:15px}
 th,td{border-bottom:1px solid #444;padding:10px;text-align:left}
 .pendente{color:#ff5555;font-weight:bold}
 .pago{color:#4ade80;font-weight:bold}
+.acoes button{margin:3px;width:auto;padding:8px}
+@media(max-width:700px){
+  table{font-size:13px}
+  th,td{padding:6px}
+}
 </style>
 </head>
 
@@ -40,6 +48,25 @@ th,td{border-bottom:1px solid #444;padding:10px;text-align:left}
   <div class="topo">
     <h1>🥊 Team Brutal</h1>
     <button id="btnSair">Sair</button>
+  </div>
+
+  <div class="dashboard">
+    <div class="dash-card">
+      <h3 id="totalAlunos">0</h3>
+      <p>Alunos</p>
+    </div>
+    <div class="dash-card">
+      <h3 id="totalPagos">0</h3>
+      <p>Pagos no mês</p>
+    </div>
+    <div class="dash-card">
+      <h3 id="totalPendentes">0</h3>
+      <p>Pendentes</p>
+    </div>
+    <div class="dash-card">
+      <h3 id="receitaMes">R$ 0,00</h3>
+      <p>Receita do mês</p>
+    </div>
   </div>
 
   <div class="box">
@@ -63,14 +90,17 @@ th,td{border-bottom:1px solid #444;padding:10px;text-align:left}
   <div class="box">
     <h2>Alunos cadastrados</h2>
 
+    <input id="pesquisa" placeholder="🔍 Pesquisar aluno pelo nome">
+
     <table>
       <thead>
         <tr>
           <th>Nome</th>
           <th>Telefone</th>
           <th>Mensalidade</th>
-          <th>Vencimento</th>
+          <th>Venc.</th>
           <th>Status</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody id="listaAlunos"></tbody>
@@ -94,6 +124,8 @@ import {
   collection,
   addDoc,
   getDocs,
+  doc,
+  updateDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
@@ -110,11 +142,18 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+let alunos = [];
+
 const loginArea = document.getElementById("loginArea");
 const painel = document.getElementById("painel");
 const msg = document.getElementById("msg");
 const msgAluno = document.getElementById("msgAluno");
 const listaAlunos = document.getElementById("listaAlunos");
+
+function mesAtual(){
+  const hoje = new Date();
+  return hoje.getFullYear() + "-" + String(hoje.getMonth()+1).padStart(2,"0");
+}
 
 document.getElementById("btnLogin").addEventListener("click", async () => {
   const email = document.getElementById("email").value;
@@ -122,15 +161,11 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
 
   try {
     await signInWithEmailAndPassword(auth, email, senha);
-
     loginArea.style.display = "none";
     painel.style.display = "block";
-
     carregarAlunos();
-
   } catch(error) {
     msg.innerHTML = "❌ Email ou senha inválidos";
-    console.error(error);
   }
 });
 
@@ -160,6 +195,7 @@ document.getElementById("btnSalvarAluno").addEventListener("click", async () => 
       vencimento,
       obs,
       statusAtual: "pendente",
+      ultimoPagamento: "",
       criadoEm: serverTimestamp(),
       historicoPagamentos: {}
     });
@@ -176,17 +212,50 @@ document.getElementById("btnSalvarAluno").addEventListener("click", async () => 
 
   } catch(error) {
     msgAluno.innerHTML = "❌ Erro ao salvar aluno.";
-    console.error(error);
   }
 });
 
 async function carregarAlunos(){
-  listaAlunos.innerHTML = "";
-
+  alunos = [];
   const querySnapshot = await getDocs(collection(db, "alunos"));
 
-  querySnapshot.forEach((doc) => {
-    const aluno = doc.data();
+  querySnapshot.forEach((docSnap) => {
+    alunos.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    });
+  });
+
+  renderizarAlunos();
+}
+
+function renderizarAlunos(){
+  const busca = document.getElementById("pesquisa").value.toLowerCase();
+  listaAlunos.innerHTML = "";
+
+  let pagos = 0;
+  let pendentes = 0;
+  let receita = 0;
+
+  const mes = mesAtual();
+
+  const filtrados = alunos.filter(aluno =>
+    aluno.nome.toLowerCase().includes(busca)
+  );
+
+  alunos.forEach(aluno => {
+    const pagoMes = aluno.historicoPagamentos && aluno.historicoPagamentos[mes];
+
+    if(pagoMes){
+      pagos++;
+      receita += Number(aluno.valor || 0);
+    }else{
+      pendentes++;
+    }
+  });
+
+  filtrados.forEach((aluno) => {
+    const pagoMes = aluno.historicoPagamentos && aluno.historicoPagamentos[mes];
 
     listaAlunos.innerHTML += `
       <tr>
@@ -194,13 +263,48 @@ async function carregarAlunos(){
         <td>${aluno.telefone}</td>
         <td>R$ ${Number(aluno.valor).toFixed(2)}</td>
         <td>Dia ${aluno.vencimento}</td>
-        <td class="${aluno.statusAtual === "pago" ? "pago" : "pendente"}">
-          ${aluno.statusAtual === "pago" ? "Pago" : "Pendente"}
+        <td class="${pagoMes ? "pago" : "pendente"}">
+          ${pagoMes ? "Pago" : "Pendente"}
+        </td>
+        <td class="acoes">
+          <button onclick="receberPagamento('${aluno.id}')">Receber</button>
         </td>
       </tr>
     `;
   });
+
+  document.getElementById("totalAlunos").innerText = alunos.length;
+  document.getElementById("totalPagos").innerText = pagos;
+  document.getElementById("totalPendentes").innerText = pendentes;
+  document.getElementById("receitaMes").innerText =
+    receita.toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
 }
+
+window.receberPagamento = async function(id){
+  const aluno = alunos.find(a => a.id === id);
+  if(!aluno) return;
+
+  const mes = mesAtual();
+
+  const novoHistorico = {
+    ...(aluno.historicoPagamentos || {}),
+    [mes]: {
+      pago: true,
+      data: new Date().toLocaleDateString("pt-BR"),
+      valor: Number(aluno.valor || 0)
+    }
+  };
+
+  await updateDoc(doc(db, "alunos", id), {
+    statusAtual: "pago",
+    ultimoPagamento: new Date().toLocaleDateString("pt-BR"),
+    historicoPagamentos: novoHistorico
+  });
+
+  carregarAlunos();
+}
+
+document.getElementById("pesquisa").addEventListener("input", renderizarAlunos);
 
 </script>
 
