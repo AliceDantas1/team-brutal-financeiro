@@ -340,7 +340,7 @@ function renderizarAlunos(){
             ? `<button onclick="reativarAluno('${aluno.id}')">Reativar</button>`
             : `<button onclick="suspenderAluno('${aluno.id}')">Suspender</button>`
           }
-
+<button onclick="editarAluno('${aluno.id}')">Editar</button>
           <button onclick="excluirAluno('${aluno.id}', '${aluno.nome}')">Excluir</button>
         </td>
       </tr>
@@ -410,7 +410,32 @@ window.reativarAluno = async function(id){
 
   carregarAlunos();
 }
+window.editarAluno = async function(id){
 
+  const aluno = alunos.find(a => a.id === id);
+  if(!aluno) return;
+
+  const nome = prompt("Nome:", aluno.nome);
+  if(nome === null) return;
+
+  const telefone = prompt("Telefone:", aluno.telefone);
+  if(telefone === null) return;
+
+  const valor = prompt("Mensalidade:", aluno.valor);
+  if(valor === null) return;
+
+  const vencimento = prompt("Vencimento (10 ou 20):", aluno.vencimento);
+  if(vencimento === null) return;
+
+  await updateDoc(doc(db, "alunos", id), {
+    nome,
+    telefone,
+    valor: Number(valor),
+    vencimento
+  });
+
+  carregarAlunos();
+}
 window.excluirAluno = async function(id, nome){
   if(!confirm("Excluir " + nome + "?")) return;
 
