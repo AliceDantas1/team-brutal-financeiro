@@ -351,8 +351,9 @@ function renderizarAlunos(){
         <td class="acoes">
           ${
             pagoMes
-            ? `<span class="pago">Pago em ${aluno.ultimoPagamento || ""}</span>`
-            : `<button onclick="receberPagamento('${aluno.id}')">Receber</button>`
+? `<span class="pago">Pago em ${aluno.ultimoPagamento || ""}</span>
+   <button onclick="desfazerPagamento('${aluno.id}')">Desfazer</button>`
+: `<button onclick="receberPagamento('${aluno.id}')">Receber</button>`
           }
 
           <button onclick="abrirWhatsApp('${telefoneLimpo}', '${aluno.nome}')">WhatsApp</button>
@@ -399,7 +400,28 @@ window.receberPagamento = async function(id){
 
   carregarAlunos();
 }
+window.desfazerPagamento = async function(id){
+  const aluno = alunos.find(a => a.id === id);
+  if(!aluno) return;
 
+  if(!confirm("Deseja desfazer o pagamento deste mês?")) return;
+
+  const mes = mesAtual();
+
+  const novoHistorico = {
+    ...(aluno.historicoPagamentos || {})
+  };
+
+  delete novoHistorico[mes];
+
+  await updateDoc(doc(db, "alunos", id), {
+    statusAtual: "pendente",
+    ultimoPagamento: "",
+    historicoPagamentos: novoHistorico
+  });
+
+  carregarAlunos();
+}
 
 window.abrirWhatsApp = function(telefone, nome){
   if(!telefone){
