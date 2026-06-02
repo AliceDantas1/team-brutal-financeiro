@@ -376,10 +376,27 @@ function renderizarAlunos(){
   document.getElementById("receitaMes").innerText =
     receita.toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
 }
-
 window.receberPagamento = async function(id){
   const aluno = alunos.find(a => a.id === id);
   if(!aluno) return;
+
+  const forma = prompt("Forma de pagamento: Pix, Dinheiro ou Cartão", "Pix");
+  if(forma === null) return;
+
+  const formaNormalizada = forma.trim().toLowerCase();
+
+  let formaPagamento = "";
+
+  if(formaNormalizada === "pix"){
+    formaPagamento = "Pix";
+  }else if(formaNormalizada === "dinheiro"){
+    formaPagamento = "Dinheiro";
+  }else if(formaNormalizada === "cartao" || formaNormalizada === "cartão"){
+    formaPagamento = "Cartão";
+  }else{
+    alert("Forma inválida. Digite Pix, Dinheiro ou Cartão.");
+    return;
+  }
 
   const mes = mesAtual();
 
@@ -388,12 +405,14 @@ window.receberPagamento = async function(id){
     [mes]: {
       pago: true,
       data: new Date().toLocaleDateString("pt-BR"),
-      valor: Number(aluno.valor || 0)
+      valor: Number(aluno.valor || 0),
+      forma: formaPagamento
     }
   };
 
   await updateDoc(doc(db, "alunos", id), {
     statusAtual: "pago",
+    situacao: "ativo",
     ultimoPagamento: new Date().toLocaleDateString("pt-BR"),
     historicoPagamentos: novoHistorico
   });
@@ -499,7 +518,7 @@ window.abrirWhatsApp = function(telefone, nome){
 
 Sua mensalidade do Studio Team Brutal encontra-se pendente.
 
-Caso já tenha realizado o pagamento, por favor desconsidere esta mensagem.
+Caso já tenha realizado o pagamento, por favor nos envie o comprovante e desconsidere esta mensagem.
 
 🥊 Team Brutal`;
 
@@ -552,8 +571,7 @@ window.verHistorico = function(id){
     texto += "Nenhum pagamento registrado ainda.";
   }else{
     Object.keys(historico).forEach(mes => {
-      texto += `${mes}: Pago em ${historico[mes].data} - R$ ${historico[mes].valor}\n`;
-    });
+texto += `${mes}: Pago em ${historico[mes].data} - R$ ${historico[mes].valor} - ${historico[mes].forma || "Forma não informada"}\n`;    });
   }
 
   alert(texto);
