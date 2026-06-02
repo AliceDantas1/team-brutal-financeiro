@@ -83,6 +83,17 @@ th,td{border-bottom:1px solid #444;padding:10px;text-align:left}
       <option value="10">Vencimento dia 10</option>
       <option value="20">Vencimento dia 20</option>
     </select>
+    <select id="modalidade">
+  <option value="Lutas">Modalidade: Lutas</option>
+  <option value="Pilates">Modalidade: Pilates</option>
+</select>
+
+<select id="instrutor">
+  <option value="Ithalo">Instrutor: Ithalo</option>
+  <option value="Flávia">Instrutor: Flávia</option>
+  <option value="Robson">Instrutor: Robson</option>
+  <option value="Índio">Instrutor: Índio</option>
+</select>
 
     <textarea id="obs" placeholder="Observações"></textarea>
 
@@ -108,8 +119,10 @@ th,td{border-bottom:1px solid #444;padding:10px;text-align:left}
           <th>Nome</th>
           <th>Telefone</th>
           <th>Mensalidade</th>
-          <th>Venc.</th>
-          <th>Status</th>
+         <th>Venc.</th>
+<th>Modalidade</th>
+<th>Instrutor</th>
+<th>Status</th>
           <th>Ações</th>
         </tr>
       </thead>
@@ -191,8 +204,10 @@ document.getElementById("btnSalvarAluno").addEventListener("click", async () => 
   const nome = document.getElementById("nome").value.trim();
   const telefone = document.getElementById("telefone").value.trim();
   const valor = Number(document.getElementById("valor").value);
-  const vencimento = document.getElementById("vencimento").value;
-  const obs = document.getElementById("obs").value.trim();
+ const vencimento = document.getElementById("vencimento").value;
+const modalidade = document.getElementById("modalidade").value;
+const instrutor = document.getElementById("instrutor").value;
+const obs = document.getElementById("obs").value.trim();
 
   if(!nome || !telefone || !valor){
     msgAluno.innerHTML = "❌ Preencha nome, telefone e mensalidade.";
@@ -204,9 +219,11 @@ document.getElementById("btnSalvarAluno").addEventListener("click", async () => 
       nome,
       telefone,
       valor,
-      vencimento,
-      obs,
-      statusAtual: "pendente",
+     vencimento,
+modalidade,
+instrutor,
+obs,
+statusAtual: "pendente",
       ultimoPagamento: "",
       criadoEm: serverTimestamp(),
       historicoPagamentos: {}
@@ -217,8 +234,10 @@ document.getElementById("btnSalvarAluno").addEventListener("click", async () => 
     document.getElementById("nome").value = "";
     document.getElementById("telefone").value = "";
     document.getElementById("valor").value = "130";
-    document.getElementById("vencimento").value = "10";
-    document.getElementById("obs").value = "";
+   document.getElementById("vencimento").value = "10";
+document.getElementById("modalidade").value = "Lutas";
+document.getElementById("instrutor").value = "Ithalo";
+document.getElementById("obs").value = "";
 
     carregarAlunos();
 
@@ -333,6 +352,8 @@ function renderizarAlunos(){
         <td>${aluno.telefone}</td>
         <td>R$ ${Number(aluno.valor).toFixed(2)}</td>
         <td>Dia ${aluno.vencimento}</td>
+        <td>${aluno.modalidade || "Não informado"}</td>
+<td>${aluno.instrutor || "Não informado"}</td>
 
         <td class="${pagoMes ? "pago" : "pendente"}">
           ${pagoMes ? "Pago" : "Pendente"}
