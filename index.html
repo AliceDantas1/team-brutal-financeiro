@@ -79,10 +79,11 @@ th,td{border-bottom:1px solid #444;padding:10px;text-align:left}
     <input id="telefone" placeholder="Telefone/WhatsApp">
     <input id="valor" type="number" value="130" placeholder="Mensalidade">
 
-    <select id="vencimento">
-      <option value="10">Vencimento dia 10</option>
-      <option value="20">Vencimento dia 20</option>
-    </select>
+   <select id="vencimento">
+  <option value="5">Vencimento dia 05</option>
+  <option value="10">Vencimento dia 10</option>
+  <option value="20">Vencimento dia 20</option>
+</select>
     <select id="modalidade">
   <option value="Lutas">Modalidade: Lutas</option>
   <option value="Pilates">Modalidade: Pilates</option>
@@ -508,15 +509,21 @@ window.editarAluno = async function(id){
   const valor = prompt("Mensalidade:", aluno.valor);
   if(valor === null) return;
 
-  const vencimento = prompt("Vencimento (10 ou 20):", aluno.vencimento);
+const vencimento = prompt("Vencimento (5, 10 ou 20):", aluno.vencimento);
   if(vencimento === null) return;
+const modalidade = prompt("Modalidade (Lutas ou Pilates):", aluno.modalidade || "Lutas");
+if(modalidade === null) return;
 
-  await updateDoc(doc(db, "alunos", id), {
-    nome,
-    telefone,
-    valor: Number(valor),
-    vencimento
-  });
+const instrutor = prompt("Instrutor:", aluno.instrutor || "Ithalo");
+if(instrutor === null) return;
+ await updateDoc(doc(db, "alunos", id), {
+  nome,
+  telefone,
+  valor: Number(valor),
+  vencimento,
+  modalidade,
+  instrutor
+});
 
   carregarAlunos();
 }
